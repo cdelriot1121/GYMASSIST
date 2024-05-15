@@ -127,7 +127,6 @@ jTableDatosGimnasios.addMouseListener(new MouseAdapter() {
         jButton3 = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
-        jMenuItem1 = new javax.swing.JMenuItem();
         MenuItemCerrarSesion = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -316,9 +315,6 @@ jTableDatosGimnasios.addMouseListener(new MouseAdapter() {
 
         jMenu1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons_images/icon_perfil.png"))); // NOI18N
 
-        jMenuItem1.setText("Modificar mis datos");
-        jMenu1.add(jMenuItem1);
-
         MenuItemCerrarSesion.setText("Cerrar Sesion");
         MenuItemCerrarSesion.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -453,7 +449,6 @@ jTableDatosGimnasios.addMouseListener(new MouseAdapter() {
     private javax.swing.JLabel jLabel9;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;

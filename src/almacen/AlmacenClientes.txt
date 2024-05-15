@@ -2,3 +2,4 @@ Samuel, TI, 9988, sam.com, sam, 0
 Oliver, CC, 5533, oli.com, oli, 0
 Sebastian, CC, 9977, seb.com, seb, 0
 Ana, TI, 2230112, ana.com, ana, 0
+Miguel, CC, 112255, migue.com, migue, 0

@@ -233,4 +233,76 @@ public class GimnasioController {
         }
         return clientesRecogidos;
     }
+    
+    public List<PersonaModel> getRegistroClientes() {
+        return registroClientes;
+    }
+    
+    public void cargarClientesDesdeArchivo() {
+    try (BufferedReader lector = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/almacen/AlmacenClientes.txt")))) {
+        String linea;
+        while ((linea = lector.readLine()) != null) {
+            StringTokenizer st = new StringTokenizer(linea, ",");
+            String nombre = null;
+
+            if (st.hasMoreTokens()) {
+                nombre = st.nextToken().trim();
+            }
+
+            if (nombre != null && !nombre.isEmpty()) {
+                PersonaModel cliente = new PersonaModel(nombre, "", "", "", "", 0);
+                registroClientes.add(cliente); // Agregar cliente al registro
+            }
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+    
+    public List<PersonaModel> cargarDetallesClientes(List<String> nombresClientes) {
+    List<PersonaModel> detallesClientes = new ArrayList<>();
+    try (BufferedReader lector = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/almacen/AlmacenClientes.txt")))) {
+        String linea;
+        while ((linea = lector.readLine()) != null) {
+            StringTokenizer st = new StringTokenizer(linea, ",");
+            String nombre = null;
+            String tp_id = null;
+            String no_id = null;
+            String correo = null;
+            String contraseña = null;
+            int asistencias = 0;
+
+            if (st.hasMoreTokens()) {
+                nombre = st.nextToken().trim();
+            }
+            if (st.hasMoreTokens()) {
+                tp_id = st.nextToken().trim();
+            }
+            if (st.hasMoreTokens()) {
+                no_id = st.nextToken().trim();
+            }
+            if (st.hasMoreTokens()) {
+                correo = st.nextToken().trim();
+            }
+            if (st.hasMoreTokens()) {
+                contraseña = st.nextToken().trim();
+            }
+            if (st.hasMoreTokens()) {
+                asistencias = Integer.parseInt(st.nextToken().trim());
+            }
+
+            if (nombresClientes.contains(nombre)) {
+                PersonaModel cliente = new PersonaModel(nombre, tp_id, no_id, correo, contraseña, asistencias);
+                detallesClientes.add(cliente);
+            }
+        }
+    } catch (IOException | NumberFormatException e) {
+        e.printStackTrace();
+    }
+    return detallesClientes;
+}
+
+
+    
+    
 }

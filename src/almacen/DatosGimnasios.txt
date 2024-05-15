@@ -1,3 +1,3 @@
-DelrioGym,90000,Samuel
+DelrioGym,90000,Samuel,Miguel
 AliceGym,150000,Oliver,Sebastian,Ana
 MañeGymYfria,20000

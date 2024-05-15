@@ -16,11 +16,6 @@
             </Property>
           </Properties>
           <SubComponents>
-            <MenuItem class="javax.swing.JMenuItem" name="jMenuItem1">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Modificar mis datos"/>
-              </Properties>
-            </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="MenuItemCerrarSesion">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Cerrar Sesion"/>

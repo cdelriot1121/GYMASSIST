@@ -11,7 +11,7 @@ import logic.model.PersonaModel;
 
 /**
  *
- * @author HP
+ * @author Carlos Delrio
  */
 
 public class AdminScreen extends javax.swing.JFrame {
@@ -31,8 +31,8 @@ public class AdminScreen extends javax.swing.JFrame {
         
         gimnasioController = GimnasioController.getInstance(); // Obtener instancia de GimnasioController
         
-        // Cargar clientes por gimnasio
-        gimnasioController.cargarClientesPorGimnasio(adminActual.getNom_gym());
+        // Cargar clientes desde el archivo
+        gimnasioController.cargarClientesDesdeArchivo();
         
         // Mostrar los clientes en la tabla
         mostrarClientesEnTabla(); // Llamada al método para mostrar los clientes en la tabla
@@ -52,14 +52,21 @@ public class AdminScreen extends javax.swing.JFrame {
         }
     }
     
+    // Verificar si se encontró el gimnasio actual
     if (gimnasioActual != null) {
-        // Llenar la tabla con los datos de los clientes del gimnasio actual
-        for (String cliente : gimnasioActual.getClientes_gimnasio()) {
-            // Asegúrate de que cliente sea de tipo String
-            model.addRow(new Object[]{cliente});
+        // Obtener los clientes del gimnasio actual
+        List<String> nombresClientes = gimnasioController.buscarClientesPorNombreGimnasio(gimnasioActual.getNom_gym());
+        
+        // Cargar los detalles de los clientes desde el archivo
+        List<PersonaModel> detallesClientes = gimnasioController.cargarDetallesClientes(nombresClientes);
+        
+        // Llenar la tabla con los datos de los clientes
+        for (PersonaModel cliente : detallesClientes) {
+            model.addRow(new Object[]{cliente.getNombre(), cliente.getTp_id(), cliente.getNo_id(), cliente.getCorreo(), cliente.getContraseña(), cliente.getAsistencias()});
         }
     }
 }
+
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -88,7 +95,6 @@ public class AdminScreen extends javax.swing.JFrame {
         jTextField3 = new javax.swing.JTextField();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
-        jMenuItem1 = new javax.swing.JMenuItem();
         MenuItemCerrarSesion = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -248,14 +254,6 @@ public class AdminScreen extends javax.swing.JFrame {
 
         jMenu1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons_images/icon_perfil.png"))); // NOI18N
 
-        jMenuItem1.setText("Modificar mis datos");
-        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem1ActionPerformed(evt);
-            }
-        });
-        jMenu1.add(jMenuItem1);
-
         MenuItemCerrarSesion.setText("Cerrar Sesion");
         MenuItemCerrarSesion.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -282,10 +280,6 @@ public class AdminScreen extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jMenuItem1ActionPerformed
-
     private void MenuItemCerrarSesionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_MenuItemCerrarSesionActionPerformed
         MainScreen pantalla_principal = new MainScreen();
         pantalla_principal.setVisible(true);
@@ -308,7 +302,6 @@ public class AdminScreen extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel8;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
