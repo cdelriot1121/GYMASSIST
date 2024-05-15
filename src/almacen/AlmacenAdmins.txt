@@ -1,3 +1,4 @@
 CarlosDelrio, CC, 1041, car.com, car, 0, true, DelrioGym, 90000
 Jose Torres, CC, 1122, jose.com, jose, 0, true, AliceGym, 150000
 Manuel, CC, 2266, manuel.com, man, 0, true, MañeGymYfria, 20000
+Rodolfo, CC, 112255, rod.com, rod, 0, true, rodolfoGym, 30000

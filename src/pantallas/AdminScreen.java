@@ -62,10 +62,20 @@ public class AdminScreen extends javax.swing.JFrame {
         
         // Llenar la tabla con los datos de los clientes
         for (PersonaModel cliente : detallesClientes) {
-            model.addRow(new Object[]{cliente.getNombre(), cliente.getTp_id(), cliente.getNo_id(), cliente.getCorreo(), cliente.getContraseña(), cliente.getAsistencias()});
+            model.addRow(new Object[]{cliente.getNombre(), cliente.getTp_id(), cliente.getNo_id(), cliente.getCorreo(), cliente.getContraseña(), cliente.getAsistencias(), "30"});
         }
+        
+        // Calcular el valor mensual y el número total de personas inscritas
+        String valorMensual = gimnasioActual.getVal_mensual();
+        int totalPersonasInscritas = model.getRowCount();
+        
+        // Colocar los datos en los campos de texto correspondientes
+        textNombreGim.setText(gimnasioActual.getNom_gym()); //Me da error aqui porque 
+        textoValMensual.setText(String.valueOf(valorMensual));
+        TfPersonsaInscritas.setText(String.valueOf(totalPersonasInscritas));
     }
 }
+
 
 
     /**
@@ -81,16 +91,15 @@ public class AdminScreen extends javax.swing.JFrame {
         jPanel1 = new javax.swing.JPanel();
         jPanel2 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
-        labelNombreAdmin = new javax.swing.JLabel();
         jLabel5 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
-        tfNmgim = new javax.swing.JTextField();
+        textNombreGim = new javax.swing.JTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
         TablaClientes = new javax.swing.JTable();
         jLabel6 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
+        textoValMensual = new javax.swing.JTextField();
         jLabel7 = new javax.swing.JLabel();
-        jTextField2 = new javax.swing.JTextField();
+        TfPersonsaInscritas = new javax.swing.JTextField();
         jLabel8 = new javax.swing.JLabel();
         jTextField3 = new javax.swing.JTextField();
         jMenuBar1 = new javax.swing.JMenuBar();
@@ -109,12 +118,6 @@ public class AdminScreen extends javax.swing.JFrame {
         jLabel1.setText("WELCOME TO ADMIN MENU");
         jLabel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(51, 51, 51), 2));
 
-        labelNombreAdmin.setFont(new java.awt.Font("Segoe UI", 2, 14)); // NOI18N
-        labelNombreAdmin.setForeground(new java.awt.Color(0, 0, 0));
-        labelNombreAdmin.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        labelNombreAdmin.setText("NOMBRE_ADMIND");
-        labelNombreAdmin.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-
         jLabel5.setFont(new java.awt.Font("Serif", 1, 36)); // NOI18N
         jLabel5.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel5.setText("SEÑOR@");
@@ -124,8 +127,8 @@ public class AdminScreen extends javax.swing.JFrame {
         jLabel4.setForeground(new java.awt.Color(0, 0, 0));
         jLabel4.setText("CLIENTES DEL GIMNASIO: ");
 
-        tfNmgim.setEditable(false);
-        tfNmgim.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        textNombreGim.setEditable(false);
+        textNombreGim.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -137,12 +140,10 @@ public class AdminScreen extends javax.swing.JFrame {
                         .addContainerGap()
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(tfNmgim, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(textNombreGim, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGap(101, 101, 101)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel5)
-                            .addComponent(labelNombreAdmin, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addGap(98, 98, 98)
+                        .addComponent(jLabel5)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 410, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(26, 26, 26))
@@ -154,14 +155,12 @@ public class AdminScreen extends javax.swing.JFrame {
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
+                .addGap(36, 36, 36)
                 .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(labelNombreAdmin, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(18, 18, 18)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
-                    .addComponent(tfNmgim, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(textNombreGim, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(0, 10, Short.MAX_VALUE))
         );
 
@@ -172,7 +171,7 @@ public class AdminScreen extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Nombre", "TipoID", "N°ID", "Email", "Password", "Temp Mensualidad", "Asistencias"
+                "Nombre", "TipoID", "N°ID", "Email", "Password", "Asistencias", "Temp Mensualidad"
             }
         ));
         TablaClientes.getTableHeader().setResizingAllowed(false);
@@ -186,13 +185,13 @@ public class AdminScreen extends javax.swing.JFrame {
         jLabel6.setForeground(new java.awt.Color(0, 0, 0));
         jLabel6.setText("Mensualidad:");
 
-        jTextField1.setEditable(false);
+        textoValMensual.setEditable(false);
 
         jLabel7.setFont(new java.awt.Font("Segoe UI Black", 0, 18)); // NOI18N
         jLabel7.setForeground(new java.awt.Color(0, 0, 0));
         jLabel7.setText("Buscar en la Lista");
 
-        jTextField2.setEditable(false);
+        TfPersonsaInscritas.setEditable(false);
 
         jLabel8.setFont(new java.awt.Font("Microsoft YaHei UI Light", 0, 14)); // NOI18N
         jLabel8.setForeground(new java.awt.Color(0, 0, 0));
@@ -211,11 +210,11 @@ public class AdminScreen extends javax.swing.JFrame {
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addComponent(jLabel6)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(textoValMensual, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addComponent(jLabel8)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 1, Short.MAX_VALUE)))
+                                .addComponent(TfPersonsaInscritas, javax.swing.GroupLayout.PREFERRED_SIZE, 1, Short.MAX_VALUE)))
                         .addGap(18, 18, 18)
                         .addComponent(jLabel7)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -233,12 +232,12 @@ public class AdminScreen extends javax.swing.JFrame {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jTextField1, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(textoValMensual, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(jLabel6))
                         .addGap(8, 8, 8)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel8)
-                            .addComponent(jTextField2, javax.swing.GroupLayout.DEFAULT_SIZE, 24, Short.MAX_VALUE)))
+                            .addComponent(TfPersonsaInscritas, javax.swing.GroupLayout.DEFAULT_SIZE, 24, Short.MAX_VALUE)))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -294,6 +293,7 @@ public class AdminScreen extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem MenuItemCerrarSesion;
     private javax.swing.JTable TablaClientes;
+    private javax.swing.JTextField TfPersonsaInscritas;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -306,10 +306,8 @@ public class AdminScreen extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSlider jSlider1;
-    private javax.swing.JTextField jTextField1;
-    private javax.swing.JTextField jTextField2;
     private javax.swing.JTextField jTextField3;
-    private javax.swing.JLabel labelNombreAdmin;
-    private javax.swing.JTextField tfNmgim;
+    private javax.swing.JTextField textNombreGim;
+    private javax.swing.JTextField textoValMensual;
     // End of variables declaration//GEN-END:variables
 }
