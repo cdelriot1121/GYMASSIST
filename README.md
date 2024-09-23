@@ -4,7 +4,7 @@
 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Apache_NetBeans_Logo.svg/1776px-Apache_NetBeans_Logo.svg.png" alt="nb" width="110" height="120"/>
 </p>
 
-## Remember
+## Important
 <p> This was a project that I presented as a final project in one of the semesters of my technological degree. <br>
 But it is not finished yet due to errors, logic, and reading of files where data is saved. </p>
 
