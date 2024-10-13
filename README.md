@@ -4,12 +4,14 @@
 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Apache_NetBeans_Logo.svg/1776px-Apache_NetBeans_Logo.svg.png" alt="nb" width="110" height="120"/>
 </p>
 
-## Important
-<p> This was a project that I presented as a final project in one of the semesters of my technological degree. <br>
-But it is not finished yet due to errors, logic, and reading of files where data is saved. </p>
+## Importante y tener en cuenta
+<p> Este fue un proyecto que presenté como proyecto final en uno de los semestres de mi carrera tecnológica, pero aún <br>
+no está terminado debido a errores, lógica y lectura de archivos donde se guardan los datos (documentos txt). <br>
+Aun asi en este proyecto no quise meter base de datos, por temas de limites en tecnologias para presentar el proyecto para ese tiempo.
+</p>
 
-## About this proyect
+## Acerca de este pequeño proyecto
 <p>
-This system aims to help the organization of local gyms for the inhabitants of a city, <br>where they did not have this system to organize their clients, along with assistance and training plans.
-  
+Este sistema pretende ayudar a la organización de gimnasios locales para los habitantes de una ciudad, <br> 
+donde no contaban con este sistema para organizar a sus clientes, junto con planes de asistencia y entrenamiento ya predefinidos.
 </p>
