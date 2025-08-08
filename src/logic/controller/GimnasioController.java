@@ -1,34 +1,30 @@
 package logic.controller;
 
-import logic.model.GimnasioModel;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringTokenizer;
+import logic.model.GimnasioModel;
 import logic.model.PersonaModel;
 
 public class GimnasioController {
     private static GimnasioController instance;
-    private List<GimnasioModel> registroGimnasios;
-    private List<PersonaModel> registroClientes;
-    
-    
+    private final List<GimnasioModel> registroGimnasios;
+    private final List<PersonaModel> registroClientes;
+
     public GimnasioController() {
         registroGimnasios = new ArrayList<>();
         registroClientes = new ArrayList<>(); // Inicialización de la lista de clientes
-        cargarGimnasios();
+    initCargarGimnasios();
     }
 
     public List<PersonaModel> getClientes_gimnasio() {
         return this.registroClientes;
     }
-    
 
-    public static GimnasioController getInstance() {
+    public static synchronized GimnasioController getInstance() {
         if (instance == null) {
             instance = new GimnasioController();
         }
@@ -36,28 +32,51 @@ public class GimnasioController {
     }
 
     public boolean insertarGimnasio(GimnasioModel gimnasio) {
-    if (!autenticarGimnasio(gimnasio.getNom_gym())) {
-        registroGimnasios.add(gimnasio);
-        guardarGimnasios(); // Guardar la lista de gimnasios actualizada en el archivo de texto
-        System.out.println("Gimnasio insertado correctamente: " + gimnasio);
-        return true;
-    } else {
-        return false; // El gimnasio ya existe
+        // Inserta en BD si no existe
+        if (autenticarGimnasio(gimnasio.getNom_gym())) {
+            return false;
+        }
+        final String sql = "INSERT INTO gimnasios (nombre, val_mensual) VALUES (?,?)";
+        try (Connection cn = ConexionBD.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setString(1, gimnasio.getNom_gym());
+            ps.setString(2, gimnasio.getVal_mensual());
+            int rows = ps.executeUpdate();
+            if (rows > 0) {
+                registroGimnasios.add(gimnasio);
+                return true;
+            }
+        } catch (SQLException e) {
+            return false;
+        }
+        return false;
     }
-}
 
     public boolean eliminarGimnasio(String nombreGimnasio) {
-        int index = buscarGimnasio(nombreGimnasio);
-        if (index != -1) {
-            registroGimnasios.remove(index);
-            return true; // Gimnasio eliminado
-        } else {
-            return false; // Gimnasio no encontrado
+        final String sql = "DELETE FROM gimnasios WHERE nombre=?";
+        try (Connection cn = ConexionBD.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setString(1, nombreGimnasio);
+            int rows = ps.executeUpdate();
+            if (rows > 0) {
+                int index = buscarGimnasio(nombreGimnasio);
+                if (index != -1) registroGimnasios.remove(index);
+                return true;
+            }
+        } catch (SQLException e) {
+            return false;
         }
+        return false;
     }
 
     public boolean autenticarGimnasio(String nombreGimnasio) {
-        return buscarGimnasio(nombreGimnasio) != -1;
+        final String sql = "SELECT id FROM gimnasios WHERE nombre=?";
+        try (Connection cn = ConexionBD.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setString(1, nombreGimnasio);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            return false;
+        }
     }
 
     private int buscarGimnasio(String nombreGimnasio) {
@@ -68,241 +87,139 @@ public class GimnasioController {
         }
         return -1; // Gimnasio no encontrado
     }
-    
-    public List<GimnasioModel> obtenerGimnasios() { //PARA MI TIENE QUE VER ALGO AQUI
+
+    public List<GimnasioModel> obtenerGimnasios() {
         return registroGimnasios;
     }
-    
-    // METODOS PARA GUARDAR Y CARGAR GIMNASIOS EN DOCUMENTOS TXT
-    
-    
+
+    // Compatibilidad con métodos existentes (ahora no escriben TXT)
     public void guardarGimnasios() {
-    String rutaArchivo = System.getProperty("user.dir") + "/src/almacen/DatosGimnasios.txt";
-    try (BufferedWriter escritor = new BufferedWriter(new FileWriter(rutaArchivo))) {
-        for (GimnasioModel gimnasio : registroGimnasios) {
-            // Escribir el nombre del gimnasio y su valor mensual
-            escritor.write(gimnasio.getNom_gym() + "," + gimnasio.getVal_mensual());
-            
-            // Si hay clientes, agregarlos al texto
-            for (String cliente : gimnasio.getClientes_gimnasio()) {
-                escritor.write("," + cliente);
-            }
-            escritor.newLine();
-        }
-    } catch (IOException e) {
-        e.printStackTrace();
+        // No-op: los datos ya están en BD. Refrescamos cache desde BD.
+        cargarGimnasios();
     }
-}
 
-
-    
-    //Que se complemente este metodo con los dos de guardar si es necesario
-    
-    public void cargarGimnasios() {
-    try (BufferedReader lector = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/almacen/DatosGimnasios.txt")))) {
-        String linea;
-        while ((linea = lector.readLine()) != null) {
-            StringTokenizer st = new StringTokenizer(linea, ",");
-            String nombreGym = st.nextToken().trim();
-            String valorMensual = st.nextToken().trim();
-            
-            // Crear un objeto GimnasioModel con el nombre y la mensualidad
-            GimnasioModel gimnasio = new GimnasioModel(nombreGym, valorMensual);
-            
-            // Agregar clientes si existen
-            while (st.hasMoreTokens()) {
-                String cliente = st.nextToken().trim();
-                gimnasio.getClientes_gimnasio().add(cliente);
+    private void initCargarGimnasios() {
+        registroGimnasios.clear();
+        final String sql = "SELECT nombre, val_mensual FROM gimnasios";
+        try (Connection cn = ConexionBD.getConnection(); PreparedStatement ps = cn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                GimnasioModel g = new GimnasioModel(rs.getString("nombre"), rs.getString("val_mensual"));
+                // Rellenar clientes nominales (nombres) para compatibilidad con UI
+                g.setClientes_gimnasio(new ArrayList<>());
+                final String sqlCli = "SELECT p.nombre FROM inscripciones i JOIN personas p ON p.id = i.persona_id JOIN gimnasios g2 ON g2.id = i.gimnasio_id WHERE g2.nombre=?";
+                try (PreparedStatement ps2 = cn.prepareStatement(sqlCli)) {
+                    ps2.setString(1, g.getNom_gym());
+                    try (ResultSet rs2 = ps2.executeQuery()) {
+                        while (rs2.next()) {
+                            g.getClientes_gimnasio().add(rs2.getString(1));
+                        }
+                    }
+                }
+                registroGimnasios.add(g);
             }
-            
-            // Agregar el gimnasio al registro de gimnasios
-            registroGimnasios.add(gimnasio);
+        } catch (SQLException e) {
+            // dejar lista vacía si falla
         }
-    } catch (IOException e) {
-        e.printStackTrace();
     }
-}
 
-    /*
-    Aqui va un metodo para poder guardar a los clientes cuando se registran aun gimnasio
-    en el documento txt DatosGimnasio en el boton de incribir gimnasio de los clientes
-    */
+    public void cargarGimnasios() { initCargarGimnasios(); }
+
     public void guardarInscripcionGimnasio(String nombreGimnasio, String nombreCliente) {
-    String rutaArchivo = System.getProperty("user.dir") + "/src/almacen/DatosGimnasios.txt";
-    try (BufferedWriter escritor = new BufferedWriter(new FileWriter(rutaArchivo))) {
-        for (GimnasioModel gimnasio : registroGimnasios) {
-            // Si el gimnasio coincide con el nombre proporcionado
-            if (gimnasio.getNom_gym().equals(nombreGimnasio)) {
-                // Agregar el nuevo cliente a la lista de clientes del gimnasio
-                gimnasio.getClientes_gimnasio().add(nombreCliente);
-                
-                // Escribir el nombre del gimnasio y la mensualidad
-                escritor.write(gimnasio.getNom_gym() + "," + gimnasio.getVal_mensual());
-                
-                // Escribir la lista de clientes del gimnasio separados por comas
-                for (String cliente : gimnasio.getClientes_gimnasio()) {
-                    escritor.write("," + cliente);
-                }
-                
-                // Agregar un salto de línea al final
-                escritor.newLine();
-            } else {
-                // Si el gimnasio no coincide, escribir los datos sin modificar
-                escritor.write(gimnasio.getNom_gym() + "," + gimnasio.getVal_mensual());
-                for (String cliente : gimnasio.getClientes_gimnasio()) {
-                    escritor.write("," + cliente);
-                }
-                escritor.newLine();
-            }
+        final String sql = "INSERT INTO inscripciones (persona_id, gimnasio_id) " +
+                           "SELECT p.id, g.id FROM personas p, gimnasios g " +
+                           "WHERE p.nombre=? AND p.is_admin=0 AND g.nombre=? " +
+                           "AND NOT EXISTS (SELECT 1 FROM inscripciones i WHERE i.persona_id=p.id AND i.gimnasio_id=g.id)";
+        try (Connection cn = ConexionBD.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setString(1, nombreCliente);
+            ps.setString(2, nombreGimnasio);
+            ps.executeUpdate();
+            // refrescar cache
+            cargarGimnasios();
+        } catch (SQLException e) {
+            // ignorar duplicados
         }
-    } catch (IOException e) {
-        e.printStackTrace();
     }
-}
-    
+
     //Metodos Cargar y obtener clientes por gimnasio
     public void cargarClientesPorGimnasio(String nombreGimnasio) {
-    try (BufferedReader lector = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/almacen/AlmacenClientes.txt")))) {
-        String linea;
-        while ((linea = lector.readLine()) != null) {
-            StringTokenizer st = new StringTokenizer(linea, ",");
-            String nombre = null;
-            String tp_id = null;
-            String no_id = null;
-            String correo = null;
-            String contraseña = null;
-            int asistencias = 0;
-            String nom_gym = null;
-
-            if (st.hasMoreTokens()) {
-                nombre = st.nextToken().trim();
+        registroClientes.clear();
+        final String sql = "SELECT p.nombre,p.tp_id,p.no_id,p.correo,p.contrasena,p.asistencias " +
+                           "FROM personas p " +
+                           "JOIN inscripciones i ON i.persona_id = p.id " +
+                           "JOIN gimnasios g ON g.id = i.gimnasio_id " +
+                           "WHERE g.nombre = ? AND p.is_admin = 0";
+        try (Connection cn = ConexionBD.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setString(1, nombreGimnasio);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    PersonaModel cliente = new PersonaModel(
+                        rs.getString("nombre"), rs.getString("tp_id"), rs.getString("no_id"),
+                        rs.getString("correo"), rs.getString("contrasena"), rs.getInt("asistencias")
+                    );
+                    registroClientes.add(cliente);
+                }
             }
-            if (st.hasMoreTokens()) {
-                tp_id = st.nextToken().trim();
-            }
-            if (st.hasMoreTokens()) {
-                no_id = st.nextToken().trim();
-            }
-            if (st.hasMoreTokens()) {
-                correo = st.nextToken().trim();
-            }
-            if (st.hasMoreTokens()) {
-                contraseña = st.nextToken().trim();
-            }
-            if (st.hasMoreTokens()) {
-                asistencias = Integer.parseInt(st.nextToken().trim());
-            }
-            if (st.hasMoreTokens()) {
-                nom_gym = st.nextToken().trim();
-            }
-
-            if (nom_gym != null && nom_gym.equals(nombreGimnasio)) {
-                PersonaModel cliente = new PersonaModel(nombre, tp_id, no_id, correo, contraseña, asistencias);
-                registroClientes.add(cliente); // Ahora debería funcionar correctamente
-            }
+        } catch (SQLException e) {
+            // silencio
         }
-    } catch (IOException | NumberFormatException e) {
-        e.printStackTrace();
     }
-}
-    
-    
-    
-     // Método para buscar clientes por nombre de gimnasio en el registro de gimnasios
+
     public List<String> buscarClientesPorNombreGimnasio(String nombreGimnasio) {
         List<String> clientesEnGimnasio = new ArrayList<>();
-        for (GimnasioModel gimnasio : registroGimnasios) {
-            if (gimnasio.getNom_gym().equals(nombreGimnasio)) {
-                clientesEnGimnasio.addAll(gimnasio.getClientes_gimnasio());
-                break;
+        final String sql = "SELECT p.nombre FROM personas p " +
+                           "JOIN inscripciones i ON i.persona_id = p.id " +
+                           "JOIN gimnasios g ON g.id = i.gimnasio_id WHERE g.nombre=?";
+        try (Connection cn = ConexionBD.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setString(1, nombreGimnasio);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) clientesEnGimnasio.add(rs.getString(1));
             }
+        } catch (SQLException e) {
+            // silencio
         }
         return clientesEnGimnasio;
     }
 
-    // Método para recoger clientes del registro de clientes
     public List<PersonaModel> recogerClientesPorNombre(List<String> nombresClientes) {
         List<PersonaModel> clientesRecogidos = new ArrayList<>();
-        for (String nombreCliente : nombresClientes) {
-            for (PersonaModel cliente : registroClientes) {
-                if (cliente.getNombre().equals(nombreCliente)) {
-                    clientesRecogidos.add(cliente);
-                    break;
+        if (nombresClientes.isEmpty()) return clientesRecogidos;
+        final String sql = "SELECT nombre,tp_id,no_id,correo,contrasena,asistencias FROM personas WHERE is_admin=0 AND nombre IN (" +
+                           String.join(",", java.util.Collections.nCopies(nombresClientes.size(), "?")) + ")";
+        try (Connection cn = ConexionBD.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            for (int i = 0; i < nombresClientes.size(); i++) ps.setString(i + 1, nombresClientes.get(i));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    clientesRecogidos.add(new PersonaModel(
+                        rs.getString("nombre"), rs.getString("tp_id"), rs.getString("no_id"),
+                        rs.getString("correo"), rs.getString("contrasena"), rs.getInt("asistencias")
+                    ));
                 }
             }
+        } catch (SQLException e) {
+            // silencio
         }
         return clientesRecogidos;
     }
-    
+
     public List<PersonaModel> getRegistroClientes() {
         return registroClientes;
     }
-    
+
     public void cargarClientesDesdeArchivo() {
-    try (BufferedReader lector = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/almacen/AlmacenClientes.txt")))) {
-        String linea;
-        while ((linea = lector.readLine()) != null) {
-            StringTokenizer st = new StringTokenizer(linea, ",");
-            String nombre = null;
-
-            if (st.hasMoreTokens()) {
-                nombre = st.nextToken().trim();
+        // Compat: ahora carga desde BD solo nombres
+        registroClientes.clear();
+        final String sql = "SELECT nombre FROM personas WHERE is_admin=0";
+        try (Connection cn = ConexionBD.getConnection(); PreparedStatement ps = cn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                PersonaModel cliente = new PersonaModel(rs.getString(1), "", "", "", "", 0);
+                registroClientes.add(cliente);
             }
-
-            if (nombre != null && !nombre.isEmpty()) {
-                PersonaModel cliente = new PersonaModel(nombre, "", "", "", "", 0);
-                registroClientes.add(cliente); // Agregar cliente al registro
-            }
+        } catch (SQLException e) {
+            // silencio
         }
-    } catch (IOException e) {
-        e.printStackTrace();
     }
-}
-    
+
     public List<PersonaModel> cargarDetallesClientes(List<String> nombresClientes) {
-    List<PersonaModel> detallesClientes = new ArrayList<>();
-    try (BufferedReader lector = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/almacen/AlmacenClientes.txt")))) {
-        String linea;
-        while ((linea = lector.readLine()) != null) {
-            StringTokenizer st = new StringTokenizer(linea, ",");
-            String nombre = null;
-            String tp_id = null;
-            String no_id = null;
-            String correo = null;
-            String contraseña = null;
-            int asistencias = 0;
-
-            if (st.hasMoreTokens()) {
-                nombre = st.nextToken().trim();
-            }
-            if (st.hasMoreTokens()) {
-                tp_id = st.nextToken().trim();
-            }
-            if (st.hasMoreTokens()) {
-                no_id = st.nextToken().trim();
-            }
-            if (st.hasMoreTokens()) {
-                correo = st.nextToken().trim();
-            }
-            if (st.hasMoreTokens()) {
-                contraseña = st.nextToken().trim();
-            }
-            if (st.hasMoreTokens()) {
-                asistencias = Integer.parseInt(st.nextToken().trim());
-            }
-
-            if (nombresClientes.contains(nombre)) {
-                PersonaModel cliente = new PersonaModel(nombre, tp_id, no_id, correo, contraseña, asistencias);
-                detallesClientes.add(cliente);
-            }
-        }
-    } catch (IOException | NumberFormatException e) {
-        e.printStackTrace();
+        return recogerClientesPorNombre(nombresClientes);
     }
-    return detallesClientes;
-}
-
-
-    
-    
 }

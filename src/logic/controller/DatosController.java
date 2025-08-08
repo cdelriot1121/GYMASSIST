@@ -1,112 +1,201 @@
 package logic.controller;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import logic.model.AdministradorModel;
 import logic.model.PersonaModel;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.StringTokenizer;
-import javax.swing.JOptionPane;
-
 
 public class DatosController {
     private static DatosController instance; // Instancia única de DatosController
-    
-    private List<PersonaModel> registroClientes;
-    private List<AdministradorModel> registroAdmins;
+
+    private final List<PersonaModel> registroClientes;
+    private final List<AdministradorModel> registroAdmins;
 
     public DatosController() {
         registroClientes = new ArrayList<>();
         registroAdmins = new ArrayList<>();
-        cargarClientes();
-        cargarAdmins();
+    initCargarClientes();
+    initCargarAdmins();
     }
-    
+
     // Método para obtener la instancia única de DatosController
-    public static DatosController getInstance() {
+    public static synchronized DatosController getInstance() {
         if (instance == null) {
             instance = new DatosController();
         }
         return instance;
     }
+
+    // CRUD CLIENTE (tabla personas, is_admin = 0)
     public boolean insertarCliente(PersonaModel cliente) {
-        if (buscarCliente(cliente.getCorreo()) == -1) {
-            registroClientes.add(cliente);
-            return true;
-        } else {
-            return false; // El cliente ya existe
+        final String sql = "INSERT INTO personas (nombre, tp_id, no_id, correo, contrasena, asistencias, is_admin) VALUES (?,?,?,?,?,?,0)";
+        try (Connection cn = ConexionBD.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setString(1, cliente.getNombre());
+            ps.setString(2, cliente.getTp_id());
+            ps.setString(3, cliente.getNo_id());
+            ps.setString(4, cliente.getCorreo());
+            ps.setString(5, cliente.getContraseña());
+            ps.setInt(6, cliente.getAsistencias());
+            int rows = ps.executeUpdate();
+            if (rows > 0) {
+                // cache ligera
+                if (buscarCliente(cliente.getCorreo()) == -1) registroClientes.add(cliente);
+                return true;
+            }
+        } catch (SQLException e) {
+            // correo duplicado u otros errores
+            return false;
         }
+        return false;
     }
 
     public boolean insertarAdmin(AdministradorModel admin) {
-        if (buscarAdmin(admin.getCorreo()) == -1) {
-            registroAdmins.add(admin);
-            return true;
-        } else {
-            return false; // El administrador ya existe
+        final String sql = "INSERT INTO personas (nombre, tp_id, no_id, correo, contrasena, asistencias, is_admin, nom_gym, val_mens) VALUES (?,?,?,?,?,?,1,?,?)";
+        try (Connection cn = ConexionBD.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setString(1, admin.getNombre());
+            ps.setString(2, admin.getTp_id());
+            ps.setString(3, admin.getNo_id());
+            ps.setString(4, admin.getCorreo());
+            ps.setString(5, admin.getContraseña());
+            ps.setInt(6, admin.getAsistencias());
+            ps.setString(7, admin.getNom_gym());
+            ps.setString(8, admin.getVal_mens());
+            int rows = ps.executeUpdate();
+            if (rows > 0) {
+                if (buscarAdmin(admin.getCorreo()) == -1) registroAdmins.add(admin);
+                return true;
+            }
+        } catch (SQLException e) {
+            return false;
         }
+        return false;
     }
 
     public boolean modificarCliente(PersonaModel cliente) {
-        int index = buscarCliente(cliente.getCorreo());
-        if (index != -1) {
-            registroClientes.set(index, cliente);
-            return true;
-        } else {
-            return false; // Cliente no encontrado
+        final String sql = "UPDATE personas SET nombre=?, tp_id=?, no_id=?, contrasena=?, asistencias=? WHERE correo=? AND is_admin=0";
+        try (Connection cn = ConexionBD.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setString(1, cliente.getNombre());
+            ps.setString(2, cliente.getTp_id());
+            ps.setString(3, cliente.getNo_id());
+            ps.setString(4, cliente.getContraseña());
+            ps.setInt(5, cliente.getAsistencias());
+            ps.setString(6, cliente.getCorreo());
+            int rows = ps.executeUpdate();
+            if (rows > 0) {
+                int idx = buscarCliente(cliente.getCorreo());
+                if (idx != -1) registroClientes.set(idx, cliente);
+                return true;
+            }
+        } catch (SQLException e) {
+            return false;
         }
+        return false;
     }
 
     public boolean modificarAdmin(AdministradorModel admin) {
-        int index = buscarAdmin(admin.getCorreo());
-        if (index != -1) {
-            registroAdmins.set(index, admin);
-            return true;
-        } else {
-            return false; // Administrador no encontrado
+        final String sql = "UPDATE personas SET nombre=?, tp_id=?, no_id=?, contrasena=?, asistencias=?, nom_gym=?, val_mens=? WHERE correo=? AND is_admin=1";
+        try (Connection cn = ConexionBD.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setString(1, admin.getNombre());
+            ps.setString(2, admin.getTp_id());
+            ps.setString(3, admin.getNo_id());
+            ps.setString(4, admin.getContraseña());
+            ps.setInt(5, admin.getAsistencias());
+            ps.setString(6, admin.getNom_gym());
+            ps.setString(7, admin.getVal_mens());
+            ps.setString(8, admin.getCorreo());
+            int rows = ps.executeUpdate();
+            if (rows > 0) {
+                int idx = buscarAdmin(admin.getCorreo());
+                if (idx != -1) registroAdmins.set(idx, admin);
+                return true;
+            }
+        } catch (SQLException e) {
+            return false;
         }
+        return false;
     }
 
     public boolean eliminarCliente(String correo) {
-        int index = buscarCliente(correo);
-        if (index != -1) {
-            registroClientes.remove(index);
-            return true; // Cliente eliminado
-        } else {
-            return false; // Cliente no encontrado
+        final String sql = "DELETE FROM personas WHERE correo=? AND is_admin=0";
+        try (Connection cn = ConexionBD.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setString(1, correo);
+            int rows = ps.executeUpdate();
+            if (rows > 0) {
+                int idx = buscarCliente(correo);
+                if (idx != -1) registroClientes.remove(idx);
+                return true;
+            }
+        } catch (SQLException e) {
+            return false;
         }
+        return false;
     }
 
     public boolean eliminarAdmin(String correo) {
-        int index = buscarAdmin(correo);
-        if (index != -1) {
-            registroAdmins.remove(index);
-            return true; // Administrador eliminado
-        } else {
-            return false; // Administrador no encontrado
+        final String sql = "DELETE FROM personas WHERE correo=? AND is_admin=1";
+        try (Connection cn = ConexionBD.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setString(1, correo);
+            int rows = ps.executeUpdate();
+            if (rows > 0) {
+                int idx = buscarAdmin(correo);
+                if (idx != -1) registroAdmins.remove(idx);
+                return true;
+            }
+        } catch (SQLException e) {
+            return false;
         }
+        return false;
     }
 
     public PersonaModel obtenerCliente(String correo) {
-        int index = buscarCliente(correo);
-        if (index != -1) {
-            return registroClientes.get(buscarCliente(correo));
-        } else {
-            return null; // Cliente no encontrado
+        final String sql = "SELECT nombre,tp_id,no_id,correo,contrasena,asistencias FROM personas WHERE correo=? AND is_admin=0";
+        try (Connection cn = ConexionBD.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setString(1, correo);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new PersonaModel(
+                        rs.getString("nombre"),
+                        rs.getString("tp_id"),
+                        rs.getString("no_id"),
+                        rs.getString("correo"),
+                        rs.getString("contrasena"),
+                        rs.getInt("asistencias")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            return null;
         }
+        return null;
     }
 
     public AdministradorModel obtenerAdmin(String correo) {
-        int index = buscarAdmin(correo);
-        if (index != -1) {
-            return registroAdmins.get(buscarAdmin(correo));
-        } else {
-            return null; // Administrador no encontrado
+        final String sql = "SELECT nombre,tp_id,no_id,correo,contrasena,asistencias,nom_gym,val_mens FROM personas WHERE correo=? AND is_admin=1";
+        try (Connection cn = ConexionBD.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setString(1, correo);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new AdministradorModel(
+                        true,
+                        rs.getString("nom_gym"),
+                        rs.getString("val_mens"),
+                        rs.getString("nombre"),
+                        rs.getString("tp_id"),
+                        rs.getString("no_id"),
+                        rs.getString("correo"),
+                        rs.getString("contrasena"),
+                        rs.getInt("asistencias")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            return null;
         }
+        return null;
     }
 
     private int buscarCliente(String correo) {
@@ -126,114 +215,82 @@ public class DatosController {
         }
         return -1; // Administrador no encontrado
     }
-    
-    
-    //METODOS PARA CARGAR Y GUARDAR DATOS EN LOS DOCUMENTOS TXT desde DatosController
 
-     public void cargarClientes() {
-        try (BufferedReader lector = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/almacen/AlmacenClientes.txt")))) {
-            String linea;
-            while ((linea = lector.readLine()) != null) {
-                StringTokenizer st = new StringTokenizer(linea, ",");
-                String nombre = st.nextToken().trim();
-                String tp_id = st.nextToken().trim();
-                String no_id = st.nextToken().trim();
-                String correo = st.nextToken().trim();
-                String contraseña = st.nextToken().trim();
-                int asistencias = Integer.parseInt(st.nextToken().trim());
-                // Crear un objeto PersonaModel con las partes y agregarlo a la lista de clientes
-                PersonaModel cliente = new PersonaModel(nombre, tp_id, no_id, correo, contraseña, asistencias);
-                registroClientes.add(cliente);
+    // Cargas desde BD (reemplazan lectura de TXT)
+    private void initCargarClientes() {
+        registroClientes.clear();
+        final String sql = "SELECT nombre,tp_id,no_id,correo,contrasena,asistencias FROM personas WHERE is_admin=0";
+        try (Connection cn = ConexionBD.getConnection(); PreparedStatement ps = cn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                registroClientes.add(new PersonaModel(
+                    rs.getString("nombre"), rs.getString("tp_id"), rs.getString("no_id"),
+                    rs.getString("correo"), rs.getString("contrasena"), rs.getInt("asistencias")
+                ));
             }
-        } catch (IOException | NumberFormatException e) {
-            e.printStackTrace();
+        } catch (SQLException e) {
+            // silencio: dejamos lista vacía si falla
         }
     }
 
-    public void cargarAdmins() {
-        try (BufferedReader lector = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/almacen/AlmacenAdmins.txt")))) {
-            String linea;
-            while ((linea = lector.readLine()) != null) {
-                StringTokenizer st = new StringTokenizer(linea, ",");
-                String nombre = st.nextToken().trim();
-                String tp_id = st.nextToken().trim();
-                String no_id = st.nextToken().trim();
-                String correo = st.nextToken().trim();
-                String contraseña = st.nextToken().trim();
-                int asistencias = Integer.parseInt(st.nextToken().trim());
-                boolean key_admin = Boolean.parseBoolean(st.nextToken().trim());
-                String nom_gym = st.nextToken().trim();
-                String val_mens = st.nextToken().trim();
-                // Crear un objeto AdministradorModel con las partes y agregarlo a la lista de admins
-                AdministradorModel admin = new AdministradorModel(key_admin, nom_gym, val_mens, nombre, tp_id, no_id, correo, contraseña, asistencias);
-                registroAdmins.add(admin);
+    private void initCargarAdmins() {
+        registroAdmins.clear();
+        final String sql = "SELECT nombre,tp_id,no_id,correo,contrasena,asistencias,nom_gym,val_mens FROM personas WHERE is_admin=1";
+        try (Connection cn = ConexionBD.getConnection(); PreparedStatement ps = cn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                registroAdmins.add(new AdministradorModel(
+                    true,
+                    rs.getString("nom_gym"),
+                    rs.getString("val_mens"),
+                    rs.getString("nombre"),
+                    rs.getString("tp_id"),
+                    rs.getString("no_id"),
+                    rs.getString("correo"),
+                    rs.getString("contrasena"),
+                    rs.getInt("asistencias")
+                ));
             }
-        } catch (IOException | NumberFormatException e) {
-            e.printStackTrace();
+        } catch (SQLException e) {
+            // silencio
         }
     }
+
+    // Métodos públicos opcionales si se desean recargas manuales desde la UI
+    public void cargarClientes() { initCargarClientes(); }
+    public void cargarAdmins() { initCargarAdmins(); }
+
+    // Upserts compatibles con llamadas existentes desde la UI
     public void guardarAdmin(AdministradorModel admin) {
-        String rutaArchivo = System.getProperty("user.dir") + "/src/almacen/AlmacenAdmins.txt";
-        try (BufferedWriter escritor = new BufferedWriter(new FileWriter(rutaArchivo, true))) {
-            escritor.write(admin.toString());
-            escritor.newLine();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (!insertarAdmin(admin)) {
+            modificarAdmin(admin);
         }
     }
 
     public void guardarCliente(PersonaModel cliente) {
-        String rutaArchivo = System.getProperty("user.dir") + "/src/almacen/AlmacenClientes.txt";
-        try (BufferedWriter escritor = new BufferedWriter(new FileWriter(rutaArchivo, true))) {
-            escritor.write(cliente.toString());
-            escritor.newLine();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (!insertarCliente(cliente)) {
+            modificarCliente(cliente);
         }
     }
-    
-    //Aqui puedes crear el otro metodo
+
+    // Cargar clientes por gimnasio desde BD usando tabla inscripciones + gimnasios
     public void cargarClientesPorGimnasio(String nombreGimnasio) {
-    try (BufferedReader lector = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/almacen/AlmacenClientes.txt")))) {
-        String linea;
-        while ((linea = lector.readLine()) != null) {
-            StringTokenizer st = new StringTokenizer(linea, ",");
-            String nombre = null;
-            String nom_gym = null;
-
-            if (st.hasMoreTokens()) {
-                nombre = st.nextToken().trim();
+        registroClientes.clear();
+        final String sql = "SELECT p.nombre,p.tp_id,p.no_id,p.correo,p.contrasena,p.asistencias " +
+                           "FROM personas p " +
+                           "JOIN inscripciones i ON i.persona_id = p.id " +
+                           "JOIN gimnasios g ON g.id = i.gimnasio_id " +
+                           "WHERE g.nombre = ? AND p.is_admin = 0";
+        try (Connection cn = ConexionBD.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setString(1, nombreGimnasio);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    registroClientes.add(new PersonaModel(
+                        rs.getString("nombre"), rs.getString("tp_id"), rs.getString("no_id"),
+                        rs.getString("correo"), rs.getString("contrasena"), rs.getInt("asistencias")
+                    ));
+                }
             }
-            if (st.hasMoreTokens()) {
-                st.nextToken(); // Saltamos el tipo de identificación
-            }
-            if (st.hasMoreTokens()) {
-                st.nextToken(); // Saltamos el número de identificación
-            }
-            if (st.hasMoreTokens()) {
-                st.nextToken(); // Saltamos el correo
-            }
-            if (st.hasMoreTokens()) {
-                st.nextToken(); // Saltamos la contraseña
-            }
-            if (st.hasMoreTokens()) {
-                st.nextToken(); // Saltamos las asistencias
-            }
-            if (st.hasMoreTokens()) {
-                nom_gym = st.nextToken().trim();
-            }
-
-            System.out.println("Nombre del cliente: " + nombre);
-            System.out.println("Nombre del gimnasio: " + nom_gym);
-
-            if (nom_gym != null && nom_gym.equals(nombreGimnasio)) {
-                PersonaModel cliente = new PersonaModel(nombre, "", "", "", "", 0);
-                registroClientes.add(cliente); // Agregar cliente al registro
-                System.out.println("Cliente agregado al gimnasio: " + nombre);
-            }
+        } catch (SQLException e) {
+            // silencio
         }
-    } catch (IOException e) {
-        e.printStackTrace();
     }
-}
 }
