@@ -1,9 +1,9 @@
-
 package pantallas;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
@@ -32,6 +32,13 @@ public class UsuarioScreen extends javax.swing.JFrame {
     this.setResizable(false);
     this.setTitle("GYMASSIST TRAINING");
     this.setIconImage(new ImageIcon(getClass().getResource("/icons_images/icono_gymassist.png")).getImage());
+    
+    // Configurar nombre del usuario en la interfaz
+    labelNombreCliente.setText(usuarioActual.getNombre());
+    
+    // Inicializar el contador de asistencias
+    jTextField4.setText(String.valueOf(usuarioActual.getAsistencias()));
+    
     gimnasioController = GimnasioController.getInstance(); // Obtener la instancia existente
     cargarDatosGimnasios(gimnasioController);
      // Configurar la tabla para que no sea editable
@@ -128,6 +135,7 @@ jTableDatosGimnasios.addMouseListener(new MouseAdapter() {
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         MenuItemCerrarSesion = new javax.swing.JMenuItem();
+        JButton btnRegistrarAsistencia = new JButton("Registrar Asistencia");
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -298,6 +306,11 @@ jTableDatosGimnasios.addMouseListener(new MouseAdapter() {
         jPanel1.add(jTextField3, new org.netbeans.lib.awtextra.AbsoluteConstraints(428, 217, 105, -1));
 
         jButton2.setText("Registrar Asistencia");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
         jPanel1.add(jButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(409, 304, -1, 38));
 
         jLabel9.setFont(new java.awt.Font("Segoe UI Black", 1, 14)); // NOI18N
@@ -423,6 +436,33 @@ jTableDatosGimnasios.addMouseListener(new MouseAdapter() {
         JOptionPane.showMessageDialog(this, "Error: Debes seleccionar un gimnasio.");
     }
     }//GEN-LAST:event_btnInscribirGimActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {
+        registrarAsistenciaActionPerformed(evt);
+    }
+    
+    private void registrarAsistenciaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_registrarAsistenciaActionPerformed
+    if (usuarioActual == null) {
+        JOptionPane.showMessageDialog(this, "Error: El usuario no está correctamente inicializado.", "Error", JOptionPane.ERROR_MESSAGE);
+        return;
+    }
+    
+    AsistenciaController asistenciaCtrl = new AsistenciaController();
+    String numeroId = usuarioActual.getNo_id(); // Obtener el número de identificación del usuario actual
+    
+    if (asistenciaCtrl.registrarAsistencia(numeroId)) {
+        JOptionPane.showMessageDialog(this, "¡Asistencia registrada con éxito!", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+        
+        // Actualizar contador de asistencias
+        int totalAsistencias = asistenciaCtrl.obtenerTotalAsistencias(numeroId);
+        jTextField4.setText(String.valueOf(totalAsistencias)); // Usando jTextField4 para mostrar las asistencias
+        
+        // Actualizar también el contador de asistencias en el modelo
+        usuarioActual.setAsistencias(totalAsistencias);
+    } else {
+        JOptionPane.showMessageDialog(this, "Ya has registrado tu asistencia hoy o hubo un error", "Aviso", JOptionPane.WARNING_MESSAGE);
+    }
+}//GEN-LAST:event_registrarAsistenciaActionPerformed
     
     /**
      * @param args the command line arguments

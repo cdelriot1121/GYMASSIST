@@ -30,3 +30,22 @@ CREATE TABLE IF NOT EXISTS inscripciones (
   FOREIGN KEY (persona_id) REFERENCES personas(id) ON DELETE CASCADE,
   FOREIGN KEY (gimnasio_id) REFERENCES gimnasios(id) ON DELETE CASCADE
 );
+
+-- Tabla para registrar asistencias
+CREATE TABLE IF NOT EXISTS asistencias (
+  id_asistencia INT AUTO_INCREMENT PRIMARY KEY,
+  id_usuario INT NOT NULL,
+  fecha DATE NOT NULL,
+  FOREIGN KEY (id_usuario) REFERENCES personas(id) ON DELETE CASCADE,
+  UNIQUE KEY idx_usuario_fecha (id_usuario, fecha)
+);
+
+-- Tabla para registrar mensualidades
+CREATE TABLE IF NOT EXISTS mensualidades (
+  id_mensualidad INT AUTO_INCREMENT PRIMARY KEY,
+  id_usuario INT NOT NULL,
+  fecha_pago DATE NOT NULL,
+  fecha_vencimiento DATE NOT NULL,
+  monto DECIMAL(10,2) NOT NULL,
+  FOREIGN KEY (id_usuario) REFERENCES personas(id) ON DELETE CASCADE
+);
